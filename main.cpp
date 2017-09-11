@@ -40,7 +40,7 @@ void runGLLoop(std::unique_ptr<EyeWindow>& window, std::unique_ptr<Eye>& eye)
 
 	//Event handler
 	SDL_Event e;
-
+	float frameCount = 0.0f;
 	float startTime = 0.0f;
 	while(running)
 	{
@@ -48,11 +48,23 @@ void runGLLoop(std::unique_ptr<EyeWindow>& window, std::unique_ptr<Eye>& eye)
 		while(SDL_PollEvent( &e ) != 0)
 		{
 			//User requests quit
-			running = !(e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE));
-			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_r)
+			running = !(e.type == SDL_QUIT);
+			// Handle keys
+			if (e.type == SDL_KEYDOWN)
 			{
-				eye->Reload();
-				std::cout << "Reloading shaders." << std::endl;
+				switch(e.key.keysym.sym)
+				{
+					case SDLK_r:
+						eye->Reload();
+						std::cout << "Reloading shaders." << std::endl;
+						break;
+					case SDLK_f:
+						eye->SetFocus();
+						break;
+					case SDLK_ESCAPE:
+						running = false;
+						break;
+				}
 			}
 		}
 

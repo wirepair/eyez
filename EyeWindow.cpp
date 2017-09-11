@@ -25,7 +25,7 @@ bool EyeWindow::initWindow()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-							  width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+							  width, height, SDL_WINDOW_OPENGL);
 	if (window == nullptr)	
 	{
 		std::cout << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;

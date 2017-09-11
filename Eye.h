@@ -4,10 +4,15 @@
 #include <iostream>
 #include <cmath>
 #include <memory>
+#include <algorithm>
 
 #include "FileMonitor.h"
 #include "time.h"
 #include "sdl_headers.h"
+
+const float FOCUS_DURATION = 0.2f;
+
+enum PupilState { FOCUSING, FOCUSED, DIALATING, DIALATED};
 
 class Eye
 {
@@ -27,6 +32,11 @@ public:
 	void Update(float delta);
 
 	void Move() const;
+
+	/** Tell the pupil to focus **/
+	void SetFocus();
+
+	void Focus(float delta);
 
 	bool IsMoving() const;
 
@@ -64,7 +74,7 @@ private:
 	void StartMovement(float delta);
 
 	/** Returns a random number in between min/max **/
-	double Random(double min, double max) const;
+	float Random(float min, float max) const;
 
 	void Destroy();
 
@@ -79,8 +89,11 @@ private:
 
 	/** shader data **/
 	GLuint u_time_loc;
+	GLuint u_eye_location;
 	GLuint u_resolution;
+	GLuint u_pupil_size;
 	GLuint u_position = 0;
+
 	
 	float u_time = 0.0f;
 
@@ -97,21 +110,28 @@ private:
 
 	/** Movement conditionals **/
 	bool isMoving;
-	double lastTime = 0.0f;
-	double moveDuration = 0.0f;
-	double holdDuration = 0.0f; 
-	double movementScale = 0.0f;
+	float lastTime = 0.0f;
+	float moveDuration = 0.0f;
+	float holdDuration = 0.0f; 
+	float movementScale = 0.0f;
 
 	/** eye position modifiers **/
-	double startX = 0.0f;
-	double startY = 0.0f;
+	float startX = 0.0f;
+	float startY = 0.0f;
 
-	double destinationX = 0.0f;
-	double destinationY = 0.0f;
+	float destinationX = 0.0f;
+	float destinationY = 0.0f;
 
-	double currentX = 0.0f;
-	double currentY = 0.0f;
+	float currentX = 0.0f;
+	float currentY = 0.0f;
 
+	// pupil focus //
+	PupilState pupilState = DIALATED;
+	double focusDuration = FOCUS_DURATION;
+	float focusScale = 0.0f;
+	float pupilSize = 0.5f;
+	float focusSize = 1.5f;
+	float currentPupilSize = pupilSize;
 	/** Debugging **/
 	std::unique_ptr<FileMonitor> fragmentMonitor;
 };

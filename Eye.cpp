@@ -98,6 +98,12 @@ void Eye::ConfigureUniforms()
 
 	u_position = glGetUniformLocation(program, "u_position");
 
+	u_pupil_size = glGetUniformLocation(program, "u_pupil_size");
+	glUniform1f(u_pupil_size, pupilSize);
+
+	u_eye_location = glGetUniformLocation(program, "u_eye_location");
+	glUniform2f(u_eye_location, currentX, currentY);
+
 }
 
 void Eye::ConfigureQuad()
@@ -153,7 +159,7 @@ void Eye::Update(float delta)
 		std::cout << "Reloading..." << std::endl;
 		Reload();
 	}
-	/*
+	
 	if (isMoving)
 	{
 		UpdateMovement(delta);
@@ -163,17 +169,84 @@ void Eye::Update(float delta)
 		StartMovement(delta);
 	}
 	holdDuration -= delta;
-	*/
+
+	Move();
+	Focus(delta);
 	// draw the quad and update u_time;
 	glUniform1f(u_time_loc, u_time += 1.0f/60.0f);
+	
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
+}
+
+void Eye::SetFocus()
+{
+	switch(pupilState)
+	{
+		case DIALATED:
+			pupilState = FOCUSING;
+			break;
+		case FOCUSED:
+			pupilState = DIALATING;
+	}
+}
+
+void Eye::Focus(float delta)
+{
+	switch (pupilState)
+	{
+		case FOCUSING:
+		{
+			std::cout << "focusing: " <<  delta << " " << focusDuration << std::endl;
+			if (delta <= focusDuration)
+			{
+				focusScale = delta / focusDuration;
+				focusScale = sin(focusScale); // (3.0f * focusScale * focusScale) - (2.0f * focusScale * focusScale * focusScale);
+				currentPupilSize = pupilSize + (focusSize - pupilSize) * focusScale;
+				std::cout << "focusing currentSize: " << currentPupilSize << std::endl;
+				glUniform1f(u_pupil_size, currentPupilSize);
+				focusDuration -= delta;
+			}
+			else
+			{
+				currentPupilSize = focusSize;
+				glUniform1f(u_pupil_size, currentPupilSize);
+				focusDuration = FOCUS_DURATION;
+				pupilState = FOCUSED;
+			}
+			break;
+		}
+		case FOCUSED: // fall through
+		case DIALATED:
+			break;
+		case DIALATING:
+		{
+			std::cout << "dialating: " <<  delta << " " << focusDuration << std::endl;
+			if (delta <= focusDuration)
+			{
+				focusScale = delta / focusDuration;
+				focusScale = sin(focusScale); //(3.0f * focusScale * focusScale) - (3.0f * focusScale * focusScale * focusScale);
+				currentPupilSize = focusSize + (pupilSize - focusSize) * focusScale;
+				std::cout << "unfocusing currentSize: " << currentPupilSize << std::endl;
+				glUniform1f(u_pupil_size, currentPupilSize);
+				focusDuration -= delta;
+			}
+			else
+			{
+				focusDuration = FOCUS_DURATION;
+				currentPupilSize = pupilSize;
+				glUniform1f(u_pupil_size, currentPupilSize);
+				pupilState = DIALATED;
+			}
+			break;	
+		}
+	}
 }
 
 void Eye::StartMovement(float delta)
 {
-	destinationX = Random(-150.0f, 150.0f);
+	destinationX = Random(-0.150f, .150f);
 	//double n = sqrt(900 - destinationX * destinationX);
-	destinationY = Random(-100.0f, 100.0f);
+	destinationY = Random(-0.100f, 0.100f);
 	moveDuration = Random(0.12, 0.35);
 	isMoving = true;
 	std::cout << " start movement " << destinationX << std::endl;
@@ -206,10 +279,8 @@ void Eye::UpdateMovement(float delta)
 
 void Eye::Move() const
 {
-	//double x = ((SCREEN_WIDTH - eyeTexture->GetWidth()) / 2) + currentX;
-	//double y = ((SCREEN_HEIGHT - eyeTexture->GetHeight()) / 2) + currentY;
 	std::cout << " X: " << currentX << " Y: " << currentY << std::endl;
-	//eyeTexture->Render(x, y, NULL, 0.0F, NULL, SDL_FLIP_NONE);
+	glUniform2f(u_eye_location, currentX, currentY);
 }
 
 bool Eye::IsMoving() const
@@ -217,10 +288,10 @@ bool Eye::IsMoving() const
 	return isMoving;
 }
 
-double Eye::Random(double min, double max) const
+float Eye::Random(float min, float max) const
 {
-	double r = (double)rand() / RAND_MAX;
-    return min + r * (max - min);
+	float r = (float)rand() / RAND_MAX;
+	return min + r * (max - min);
 }
 
 void Eye::Destroy()

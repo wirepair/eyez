@@ -17,9 +17,7 @@
 class FileMonitor
 {
 public:
-	FileMonitor(std::string& filePath) : filePath(filePath), 
-										 fd(0),
-										 wd(0) {}
+	FileMonitor(std::string& filePath) : filePath(filePath), fd(0), wd(0) {}
 	
 	FileMonitor(const FileMonitor &other) : filePath(other.filePath), fd(other.fd), wd(other.wd) {}
 
