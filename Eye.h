@@ -6,6 +6,7 @@
 #include <memory>
 #include <algorithm>
 
+#include "detectors/Detector.h"
 #include "FileMonitor.h"
 #include "time.h"
 #include "sdl_headers.h"
@@ -16,11 +17,10 @@ enum PupilState { FOCUSING, FOCUSED, DIALATING, DIALATED};
 
 class Eye
 {
-
 public:
-	Eye(std::string& vertexPath, std::string& fragmentPath) : vertexPath(vertexPath), fragmentPath(fragmentPath) {}
+	Eye(std::string& vertexPath, std::string& fragmentPath, std::string& object) : vertexPath(vertexPath), fragmentPath(fragmentPath), object(object) {}
 
-	/** Load & compile shaders **/
+	/** Load & compile shaders and detector **/
 	bool Init();
 
 	/** For debugging, will automatically reload fragment shader on change **/
@@ -47,6 +47,9 @@ public:
 private:
 	/** Initializes the vertex and fragment shaders, compiles, and links them. **/
 	bool InitializeShaders();
+
+	/** Initializes our detection method. **/
+	bool InitDetector();
 
 	/** Initializes the shader of shaderType given the shaderPath to the src **/
 	bool InitShader(GLuint& shader, std::string& shaderPath, GLenum shaderType);
@@ -79,6 +82,9 @@ private:
 	void Destroy();
 
 private:
+	/** object for our eye to detect **/
+	std::string& object;
+
 	/** shader data inputs **/
 	std::string& vertexPath;
 	std::string& fragmentPath;
@@ -132,8 +138,12 @@ private:
 	float pupilSize = 0.5f;
 	float focusSize = 1.5f;
 	float currentPupilSize = pupilSize;
+
 	/** Debugging **/
 	std::unique_ptr<FileMonitor> fragmentMonitor;
+
+	/** Detector **/
+	std::unique_ptr<Detector> detector; 
 };
 
 #endif // EYE_H

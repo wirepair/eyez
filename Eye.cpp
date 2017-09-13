@@ -1,5 +1,7 @@
 #include "Eye.h"
 #include "Loader.h"
+#include "detectors/Detector.h"
+#include "detectors/MakeDetector.h"
 
 bool Eye::Init()
 {
@@ -10,8 +12,18 @@ bool Eye::Init()
 
 	ConfigureUniforms();
 	ConfigureQuad();
-	
+
+	if (!InitDetector())
+	{
+		return false;
+	}
 	return true;
+}
+
+bool Eye::InitDetector()
+{
+	detector = makeDetector(object);
+	return detector->Init();
 }
 
 bool Eye::SetMonitorFragmentFile()

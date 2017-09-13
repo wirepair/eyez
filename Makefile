@@ -6,18 +6,23 @@ ifndef config
 endif
 export config
 
-PROJECTS := eyez
+PROJECTS := eyez-test eyez-opencv
 
 .PHONY: all clean help $(PROJECTS)
 
 all: $(PROJECTS)
 
-eyez: 
-	@echo "==== Building eyez ($(config)) ===="
-	@${MAKE} --no-print-directory -C . -f eyez.make
+eyez-test: 
+	@echo "==== Building eyez-test ($(config)) ===="
+	@${MAKE} --no-print-directory -C . -f eyez-test.make
+
+eyez-opencv: 
+	@echo "==== Building eyez-opencv ($(config)) ===="
+	@${MAKE} --no-print-directory -C . -f eyez-opencv.make
 
 clean:
-	@${MAKE} --no-print-directory -C . -f eyez.make clean
+	@${MAKE} --no-print-directory -C . -f eyez-test.make clean
+	@${MAKE} --no-print-directory -C . -f eyez-opencv.make clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
@@ -28,6 +33,7 @@ help:
 	@echo "TARGETS:"
 	@echo "   all (default)"
 	@echo "   clean"
-	@echo "   eyez"
+	@echo "   eyez-test"
+	@echo "   eyez-opencv"
 	@echo ""
 	@echo "For more information, see http://industriousone.com/premake/quick-start"

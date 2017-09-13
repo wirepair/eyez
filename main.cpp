@@ -9,6 +9,8 @@ void runGLLoop(std::unique_ptr<EyeWindow>& window, std::unique_ptr<Eye>& eye);
 
 int main(int argc, char* args[])
 {
+	bool debugFragmentFile = true;
+	std::string detectObject = "face";
 	std::string vertexPath = "res/vertex.glsl";
 	std::string fragmentPath = "res/fragment.glsl";
 
@@ -18,7 +20,7 @@ int main(int argc, char* args[])
 		return -1;
 	}
 	
-	std::unique_ptr<Eye> eye(new Eye(vertexPath, fragmentPath));
+	std::unique_ptr<Eye> eye(new Eye(vertexPath, fragmentPath, detectObject));
 	if (!eye->Init())
 	{
 		std::cout << "Failed to load our eye!" << std::endl;
@@ -26,7 +28,7 @@ int main(int argc, char* args[])
 	}
 	
 	// Debugging, disable for better perf
-	if (!eye->SetMonitorFragmentFile())
+	if (debugFragmentFile && !eye->SetMonitorFragmentFile())
 	{
 		return -1;
 	}
