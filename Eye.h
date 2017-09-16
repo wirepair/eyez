@@ -4,7 +4,6 @@
 #include <iostream>
 #include <cmath>
 #include <memory>
-#include <algorithm>
 
 #include "detectors/Detector.h"
 #include "FileMonitor.h"
@@ -31,7 +30,7 @@ public:
 
 	void Update(float delta);
 
-	void Move() const;
+	void Move();
 
 	/** Tell the pupil to focus **/
 	void SetFocus();
@@ -68,7 +67,6 @@ private:
 
 	/** Prints GL linker error information **/
 	void GetLinkerError();
-
 	
 	/** Updates the movement of the eye **/
 	void UpdateMovement(float delta);
@@ -78,6 +76,8 @@ private:
 
 	/** Returns a random number in between min/max **/
 	float Random(float min, float max) const;
+
+	float Clamp(float d, float min, float max) const;
 
 	void Destroy();
 
@@ -104,13 +104,13 @@ private:
 	float u_time = 0.0f;
 
 	/** shader quad vertices for rendering the eye on to **/
-	const GLfloat vertices[12] = { -1, -1, 0,  // bottom left corner
-                             -1,  1, 0,  // top left corner
-                              1,  1, 0,  // top right corner
-                              1, -1, 0}; // bottom right corner
+	const GLfloat vertices[12] = {  -1, -1, 0,  // bottom left corner
+									-1,  1, 0,  // top left corner
+									1,  1, 0,  // top right corner
+									1, -1, 0}; // bottom right corner
 
 	const GLubyte indices[6] = { 0, 2, 1,     // first triangle (bottom left - top left - top right)
-	                            0, 3, 2 };
+								0, 3, 2 };
 
 
 

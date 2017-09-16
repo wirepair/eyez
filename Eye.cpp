@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "Eye.h"
 #include "Loader.h"
 #include "detectors/Detector.h"
@@ -171,7 +173,7 @@ void Eye::Update(float delta)
 		std::cout << "Reloading..." << std::endl;
 		Reload();
 	}
-	
+	/*
 	if (isMoving)
 	{
 		UpdateMovement(delta);
@@ -181,7 +183,7 @@ void Eye::Update(float delta)
 		StartMovement(delta);
 	}
 	holdDuration -= delta;
-
+	*/
 	Move();
 	Focus(delta);
 	// draw the quad and update u_time;
@@ -257,7 +259,6 @@ void Eye::Focus(float delta)
 void Eye::StartMovement(float delta)
 {
 	destinationX = Random(-0.150f, .150f);
-	//double n = sqrt(900 - destinationX * destinationX);
 	destinationY = Random(-0.100f, 0.100f);
 	moveDuration = Random(0.12, 0.35);
 	isMoving = true;
@@ -289,10 +290,26 @@ void Eye::UpdateMovement(float delta)
 	}
 }
 
-void Eye::Move() const
+void Eye::Move()
 {
+	float x = currentX;
+	float y = currentY;
+	if (detector->Detect(&x, &y))
+	{
+		currentX = Clamp(x, -0.150f, 0.150f);
+		currentY = Clamp(y, -0.100f, 0.100f);
+		//glUniform2f(u_eye_location, x, y);
+		//return;
+	}
+
 	std::cout << " X: " << currentX << " Y: " << currentY << std::endl;
 	glUniform2f(u_eye_location, currentX, currentY);
+}
+
+float Eye::Clamp(float d, float min, float max) const
+{
+  const float t = d < min ? min : d;
+  return t > max ? max : t;
 }
 
 bool Eye::IsMoving() const

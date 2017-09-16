@@ -14,30 +14,25 @@ int main(int argc, char* args[])
 	std::string vertexPath = "res/vertex.glsl";
 	std::string fragmentPath = "res/fragment.glsl";
 
-	std::unique_ptr<EyeWindow> eyeWindow(new EyeWindow(SCREEN_WIDTH, SCREEN_HEIGHT));
-	if (!eyeWindow->Init())
+	EyeWindow eyeWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+	if (!eyeWindow.Init())
 	{
 		return -1;
 	}
 	
-	std::unique_ptr<Eye> eye(new Eye(vertexPath, fragmentPath, detectObject));
-	if (!eye->Init())
+	Eye eye(vertexPath, fragmentPath, detectObject);
+	if (!eye.Init())
 	{
 		std::cout << "Failed to load our eye!" << std::endl;
 		return -1;
 	}
 	
 	// Debugging, disable for better perf
-	if (debugFragmentFile && !eye->SetMonitorFragmentFile())
+	if (debugFragmentFile && !eye.SetMonitorFragmentFile())
 	{
 		return -1;
 	}
-	runGLLoop(eyeWindow, eye);
 
-}
-
-void runGLLoop(std::unique_ptr<EyeWindow>& window, std::unique_ptr<Eye>& eye)
-{
 	bool running = true;
 
 	//Event handler
@@ -57,11 +52,11 @@ void runGLLoop(std::unique_ptr<EyeWindow>& window, std::unique_ptr<Eye>& eye)
 				switch(e.key.keysym.sym)
 				{
 					case SDLK_r:
-						eye->Reload();
+						eye.Reload();
 						std::cout << "Reloading shaders." << std::endl;
 						break;
 					case SDLK_f:
-						eye->SetFocus();
+						eye.SetFocus();
 						break;
 					case SDLK_ESCAPE:
 						running = false;
@@ -75,13 +70,13 @@ void runGLLoop(std::unique_ptr<EyeWindow>& window, std::unique_ptr<Eye>& eye)
 
 		// calculate delta
 		float deltaTime = (SDL_GetTicks() - startTime) / 1000.f;
-		eye->Update(deltaTime);
+		eye.Update(deltaTime);
 
 		// ensure FRAMES_PER_SECOND		
 		startTime = SDL_GetTicks();
 		SDL_Delay((1000 / FRAMES_PER_SECOND));
 
-		SDL_GL_SwapWindow(window->GetWindow());
+		SDL_GL_SwapWindow(eyeWindow.GetWindow());
 	}
 	
 	glUseProgram(0);
