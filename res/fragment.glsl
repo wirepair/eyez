@@ -55,39 +55,41 @@ float fbm(vec2 p)
 // https://www.youtube.com/watch?v=emjuqqyq_qc
 void main() 
 {
-	vec2 q = gl_FragCoord.xy/u_resolution.xy+u_eye_location; // u_eye_location here.
+	vec2 q = gl_FragCoord.xy/u_resolution.xy; // u_eye_location here.
+	
 	vec2 p = -1.0 + 2.0*q;
 	p.x *= u_resolution.x/u_resolution.y;
-
+	p.x += u_eye_location.x;
+	p.y += u_eye_location.y;
+	
 	float r = sqrt(dot(p,p));
 	float a = atan(p.y, p.x);
 	vec3 col = vec3(1.0);
-
 	
-
 	if (r < 0.5)
 	{
 		col = vec3(0.76, 0.0, 0.0); // base blue
 		
 		float f = fbm(5.0*p);
 		col = mix(col, vec3(1.0, 0.8, 1.0), f); // mix with greenish
-
+		
 		// size of center of iris
 		//f = 1.0 - smoothstep(0.2, 0.3, r);
 		//col = mix(col, vec3(0.9, 0.6, 0.2), f); // orange-ish center
 
 		a += 0.009*fbm(1.0*p);
-
+		f = smoothstep(0.3, 1.0, fbm(5.0*p));
+		/*
 		// iris
 		f = smoothstep(0.3, 1.0, fbm(vec2(12.0*r,20.0*a)));
 		col = mix(col, vec3(1.0), f);
-
+		
 		f = smoothstep(0.4, 1.6, fbm(vec2(10.0*r,15.0*a)));
 		col *= 1.20 - f;
-
+			
 		f = smoothstep(0.4, 0.9, r);
 		col *= 1.0 - 0.5*f;
- 
+ 		*/
 		// pupil
 
 		// pupil dialation
@@ -108,8 +110,9 @@ void main()
 		// fix alias   
 		f = smoothstep(0.4, 0.8, r);
 		col = mix(col, vec3(1.0), f);
-
+		
 	}
-
+	
 	gl_FragColor = vec4(col,1.0);
+
 }

@@ -9,6 +9,7 @@ bool FaceDetector::Init()
 		return false;
 	}
 
+	capture.set(CV_CAP_PROP_BUFFERSIZE, 1);
 	capture.open(0);
 	if (!capture.isOpened())
 	{
@@ -57,7 +58,6 @@ void FaceDetector::RunDetection()
 		{
 			std::cout << faces[0].x << " " << faces[0].width << " " << faces[0].y << " " << faces[0].height << std::endl;
 			Point2f center( faces[0].x + faces[0].width/2, faces[0].y + faces[0].height/2 );
-			center.y -= 65; // subtract from y axis for camera being below the eye.
 			float detectX = (2 * (center.x/frame.rows) - 1);
 			float detectY = (2 * (center.y/frame.cols) - 1);
 			std::cout << "DETECTED FACE AT: " << "x: " << detectX << " y: " << detectY << std::endl;
@@ -73,6 +73,7 @@ void FaceDetector::RunDetection()
 			detectionData.detected = false;
 			dataLock.unlock();
 		}
+		waitKey(10);
 	}
 	capture.release();
 	std::cout << "Detection Thread Completed" << std::endl;

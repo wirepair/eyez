@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <iomanip>
+#include <cfloat>
 
 #include "Eye.h"
 #include "Loader.h"
@@ -24,6 +26,10 @@ bool Eye::Init()
 
 bool Eye::InitDetector()
 {
+	if (detector)
+	{
+		return true;
+	}
 	detector = makeDetector(object);
 	return detector->Init();
 }
@@ -166,12 +172,26 @@ void Eye::GetLinkerError()
 	return;
 }
 
+void Eye::Calibrate()
+{
+	isCalibrating = true;
+	calibratedX = 0.0f;
+	calibratedY = 0.0f;
+	std::cout << "Calibration Started" << std::endl;
+}
+
 void Eye::Update(float delta)
 {
 	if (fragmentMonitor && fragmentMonitor->ShouldReload())
 	{
 		std::cout << "Reloading..." << std::endl;
 		Reload();
+	}
+
+	if (isCalibrating)
+	{
+		CalibrateDetector(delta);
+		return;
 	}
 	/*
 	if (isMoving)
@@ -184,12 +204,43 @@ void Eye::Update(float delta)
 	}
 	holdDuration -= delta;
 	*/
+
 	Move();
 	Focus(delta);
 	// draw the quad and update u_time;
 	glUniform1f(u_time_loc, u_time += 1.0f/60.0f);
 	
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
+}
+
+void Eye::CalibrateDetector(float delta)
+{
+	if (delta <= calibrateDuration)
+	{
+		std::unique_ptr<DetectionData> data(new DetectionData());
+		data->detected = detector->Detect(&data->x, &data->y);
+		if (data->detected)
+		{
+			detectionData.push_back(std::move(data));
+		}
+		calibrateDuration -= delta;
+	}
+	else
+	{
+		calibrateDuration = CALIBRATE_DURATION;
+		size_t numElements = detectionData.size();
+		for (const auto &data : detectionData)
+		{
+			calibratedX += data->x;
+			calibratedY += data->y;
+		}
+		calibratedX /= numElements;
+		calibratedY /= numElements;
+		detectionData.clear();
+		isCalibrating = false;
+		std::cout << "Calibration Complete: CalibratedX: " << std::setprecision(5) << calibratedX << " CalibratedY: " << calibratedY << std::endl;
+	}
+	
 }
 
 void Eye::SetFocus()
@@ -238,7 +289,7 @@ void Eye::Focus(float delta)
 			if (delta <= focusDuration)
 			{
 				focusScale = delta / focusDuration;
-				focusScale = sin(focusScale); //(3.0f * focusScale * focusScale) - (3.0f * focusScale * focusScale * focusScale);
+				focusScale = sin(focusScale); 
 				currentPupilSize = focusSize + (pupilSize - focusSize) * focusScale;
 				std::cout << "unfocusing currentSize: " << currentPupilSize << std::endl;
 				glUniform1f(u_pupil_size, currentPupilSize);
@@ -270,15 +321,13 @@ void Eye::UpdateMovement(float delta)
 	if (delta <= moveDuration)
 	{
 		movementScale = delta / moveDuration;
-		movementScale = (3.0 * movementScale * movementScale) - (2.0 * movementScale * movementScale * movementScale);
-		std::cout << "delta " << delta << " scale: " << movementScale << std::endl; 
+		movementScale = sin(movementScale); 
 		currentX = startX + (destinationX - startX) * movementScale;
 		currentY = startY + (destinationY - startY) * movementScale;
 		moveDuration -= delta;
 	}
 	else
 	{
-		std::cout << "delta > move" << std::endl;
 		startX = currentX;
 		currentX = destinationX;
 
@@ -296,14 +345,16 @@ void Eye::Move()
 	float y = currentY;
 	if (detector->Detect(&x, &y))
 	{
-		currentX = Clamp(x, -0.150f, 0.150f);
-		currentY = Clamp(y, -0.100f, 0.100f);
-		//glUniform2f(u_eye_location, x, y);
-		//return;
+		currentX = (IsSame(currentX, (x - calibratedX))) ? currentX : x - calibratedX; //Clamp(x + calibratedX, -0.150f, 0.150f) ;
+		currentY = (IsSame(currentY, (y - calibratedY))) ? currentY : y - calibratedY; // y - calibratedY; //Clamp(y + calibratedY, -0.300f, 0.100f);
 	}
-
-	std::cout << " X: " << currentX << " Y: " << currentY << std::endl;
 	glUniform2f(u_eye_location, currentX, currentY);
+}
+
+bool Eye::IsSame(float a, float b) const
+{
+	std::cout << std::setprecision(6) << fabs(a - b) << " < " << 0.009 << std::endl;
+	return fabs(a - b) < 0.015;
 }
 
 float Eye::Clamp(float d, float min, float max) const

@@ -4,8 +4,7 @@
 #include "EyeWindow.h"
 #include "Eye.h"
 #include "time.h"
-
-void runGLLoop(std::unique_ptr<EyeWindow>& window, std::unique_ptr<Eye>& eye);
+#include "fps_count.h"
 
 int main(int argc, char* args[])
 {
@@ -35,6 +34,7 @@ int main(int argc, char* args[])
 
 	bool running = true;
 
+
 	//Event handler
 	SDL_Event e;
 	float frameCount = 0.0f;
@@ -58,6 +58,9 @@ int main(int argc, char* args[])
 					case SDLK_f:
 						eye.SetFocus();
 						break;
+					case SDLK_c:
+						eye.Calibrate();
+						break;
 					case SDLK_ESCAPE:
 						running = false;
 						break;
@@ -77,6 +80,7 @@ int main(int argc, char* args[])
 		SDL_Delay((1000 / FRAMES_PER_SECOND));
 
 		SDL_GL_SwapWindow(eyeWindow.GetWindow());
+		FPS();
 	}
 	
 	glUseProgram(0);
