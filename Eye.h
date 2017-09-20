@@ -15,6 +15,7 @@
 const float FOCUS_DURATION = 0.2f * FRAMES_PER_SECOND;
 const float CALIBRATE_DURATION = 5.0f; 
 
+enum EyeState { START_MOVEMENT, MOVEMENT, END_MOVEMENT, START_DETECTED, DETECTED, END_DETECTED, HOLD_DETECTED };
 enum PupilState { FOCUSING, FOCUSED, DIALATING, DIALATED };
 
 class Eye
@@ -37,15 +38,10 @@ public:
 	/** Called every tick **/
 	void Update(float delta);
 
-	/** Update the glUniform for eye position **/
-	void Move();
-
 	/** Tell the pupil to focus **/
 	void SetFocus();
 
 	void Focus(float delta);
-
-	bool IsMoving() const;
 
 	inline GLuint GetProgram() { return program; };
 
@@ -79,11 +75,8 @@ private:
 	/** Prints GL linker error information **/
 	void GetLinkerError();
 	
-	/** Updates the movement of the eye **/
-	void UpdateMovement(float delta);
-
-	/** Starts moving the eye by setting destination location info **/
-	void StartMovement(float delta);
+	/** Handle Eye / Pupil State **/
+	void UpdateEyeState(float delta);
 
 	/** Returns a random number in between min/max **/
 	float Random(float min, float max) const;
@@ -132,6 +125,7 @@ private:
 
 	/** Movement conditionals **/
 	bool isMoving;
+	EyeState eyeState = START_MOVEMENT;
 	float lastTime = 0.0f;
 	float moveDuration = 0.0f;
 	float holdDuration = 0.0f; 
@@ -160,6 +154,9 @@ private:
 
 	/** Detector **/
 	std::unique_ptr<Detector> detector; 
+	float detectedX = 0.0f;
+	float detectedY = 0.0f;
+
 	/** Detection Calibration **/
 	float calibrateDuration = CALIBRATE_DURATION;
 	bool isCalibrating = false;

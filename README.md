@@ -10,6 +10,7 @@ My attempt at building a creepy eye for the Gakken WorldEye on a raspberry pi 3.
 Set your raspberry pi to expiremental driver (sudo raspi-config)
 - sudo apt-get update
 - sudo apt-get upgrade
+- sudo apt-get install premake4
 - Install libsdl 2.0.5 from [https://www.libsdl.org/download-2.0.php](https://www.libsdl.org/download-2.0.php)
 - Install opencv 3.0.1 from [http://www.pyimagesearch.com/2016/04/18/install-guide-raspberry-pi-3-raspbian-jessie-opencv-3/](http://www.pyimagesearch.com/2016/04/18/install-guide-raspberry-pi-3-raspbian-jessie-opencv-3/)
 - sudo modprobe bcm2835-v4l2 // load video driver

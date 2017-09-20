@@ -180,39 +180,6 @@ void Eye::Calibrate()
 	std::cout << "Calibration Started" << std::endl;
 }
 
-void Eye::Update(float delta)
-{
-	if (fragmentMonitor && fragmentMonitor->ShouldReload())
-	{
-		std::cout << "Reloading..." << std::endl;
-		Reload();
-	}
-
-	if (isCalibrating)
-	{
-		CalibrateDetector(delta);
-		return;
-	}
-	/*
-	if (isMoving)
-	{
-		UpdateMovement(delta);
-	}
-	else if (delta >= holdDuration)
-	{
-		StartMovement(delta);
-	}
-	holdDuration -= delta;
-	*/
-
-	Move();
-	Focus(delta);
-	// draw the quad and update u_time;
-	glUniform1f(u_time_loc, u_time += 1.0f/60.0f);
-	
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
-}
-
 void Eye::CalibrateDetector(float delta)
 {
 	if (delta <= calibrateDuration)
@@ -240,7 +207,131 @@ void Eye::CalibrateDetector(float delta)
 		isCalibrating = false;
 		std::cout << "Calibration Complete: CalibratedX: " << std::setprecision(5) << calibratedX << " CalibratedY: " << calibratedY << std::endl;
 	}
+}
+
+void Eye::Update(float delta)
+{
+	if (fragmentMonitor && fragmentMonitor->ShouldReload())
+	{
+		std::cout << "Reloading..." << std::endl;
+		Reload();
+	}
+
+	if (isCalibrating)
+	{
+		CalibrateDetector(delta);
+		return;
+	}
+
+	UpdateEyeState(delta);
 	
+	// move eye to new currentX & currentY location
+	glUniform2f(u_eye_location, currentX, currentY);
+
+	// draw the quad and update u_time;
+	glUniform1f(u_time_loc, u_time += 1.0f/60.0f);
+	
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
+}
+
+void Eye::UpdateEyeState(float delta)
+{
+	float x = detectedX;
+	float y = detectedY;
+	bool detected = detector->Detect(&x, &y);
+	if (detected)
+	{
+		detectedX = (IsSame(detectedX, (x - calibratedX))) ? detectedX : x - calibratedX;
+		detectedY = (IsSame(detectedY, (y - calibratedY))) ? detectedY : y - calibratedY;
+		if (eyeState < START_DETECTED)
+		{
+			eyeState = START_DETECTED;
+		}
+	}
+	else if (eyeState == END_DETECTED || eyeState == HOLD_DETECTED)
+	{
+		eyeState = START_MOVEMENT;
+	}
+
+	std::cout << "eyeState: " << eyeState << std::endl;
+
+	switch(eyeState)
+	{
+		case START_MOVEMENT:
+			destinationX = Random(-0.40f, 0.40f);
+			destinationY = Random(-0.30f, 0.30f);
+			moveDuration = Random(0.72f, 1.05f);
+			eyeState = MOVEMENT;
+			break;
+		case MOVEMENT:
+			if (delta <= moveDuration)
+			{
+				movementScale = delta / moveDuration;
+				movementScale = (3.0f * movementScale * movementScale) - (2.0f * movementScale * movementScale * movementScale);
+				currentX = startX + (destinationX - startX) * movementScale;
+				currentY = startY + (destinationY - startY) * movementScale;
+				moveDuration -= delta;
+			}
+			else
+			{
+				startX = currentX;
+				currentX = destinationX;
+
+				startY = destinationY;
+				currentY = destinationY;
+				moveDuration = Random(0.42f, 0.95);
+				eyeState = END_MOVEMENT;
+				holdDuration = Random(0.35f, 1.2f);
+			}
+			break;
+		case END_MOVEMENT:
+			if (delta >= holdDuration)
+			{
+				eyeState = START_MOVEMENT;
+			}
+			else
+			{
+				holdDuration -= delta;
+			}
+			break;
+		case START_DETECTED:
+			SetFocus();
+			destinationX = detectedX;
+			destinationY = detectedY;
+			moveDuration = Random(0.28f, 0.42f);
+			eyeState = DETECTED;
+			break;
+		case DETECTED:
+			if (delta <= moveDuration)
+			{
+				movementScale = delta / moveDuration;
+				movementScale = (3.0f * movementScale * movementScale) - (2.0f * movementScale * movementScale * movementScale);
+				currentX = startX + (destinationX - startX) * movementScale;
+				currentY = startY + (destinationY - startY) * movementScale;
+				moveDuration -= delta;
+			}
+			else
+			{
+				startX = currentX;
+				currentX = destinationX;
+
+				startY = destinationY;
+				currentY = destinationY;
+				eyeState = END_DETECTED;
+				SetFocus();
+				Focus(delta);
+				moveDuration = Random(0.28f, 0.42f);
+			}
+			break;
+		case END_DETECTED:
+			SetFocus();
+			Focus(delta);
+			currentX = detectedX;
+			currentY = detectedY;
+			break;
+		case HOLD_DETECTED:
+			break;
+	}
 }
 
 void Eye::SetFocus()
@@ -305,67 +396,19 @@ void Eye::Focus(float delta)
 			break;	
 		}
 	}
+
 }
 
-void Eye::StartMovement(float delta)
-{
-	destinationX = Random(-0.150f, .150f);
-	destinationY = Random(-0.100f, 0.100f);
-	moveDuration = Random(0.12, 0.35);
-	isMoving = true;
-	std::cout << " start movement " << destinationX << std::endl;
-}
-
-void Eye::UpdateMovement(float delta)
-{
-	if (delta <= moveDuration)
-	{
-		movementScale = delta / moveDuration;
-		movementScale = sin(movementScale); 
-		currentX = startX + (destinationX - startX) * movementScale;
-		currentY = startY + (destinationY - startY) * movementScale;
-		moveDuration -= delta;
-	}
-	else
-	{
-		startX = currentX;
-		currentX = destinationX;
-
-		startY = destinationY;
-		currentY = destinationY;
-
-		holdDuration = Random(0.15f, 1.7f);
-		isMoving = false;
-	}
-}
-
-void Eye::Move()
-{
-	float x = currentX;
-	float y = currentY;
-	if (detector->Detect(&x, &y))
-	{
-		currentX = (IsSame(currentX, (x - calibratedX))) ? currentX : x - calibratedX; //Clamp(x + calibratedX, -0.150f, 0.150f) ;
-		currentY = (IsSame(currentY, (y - calibratedY))) ? currentY : y - calibratedY; // y - calibratedY; //Clamp(y + calibratedY, -0.300f, 0.100f);
-	}
-	glUniform2f(u_eye_location, currentX, currentY);
-}
-
+/** Give a bit of tolerance so we don't have the eye shaking **/
 bool Eye::IsSame(float a, float b) const
 {
-	std::cout << std::setprecision(6) << fabs(a - b) << " < " << 0.009 << std::endl;
 	return fabs(a - b) < 0.015;
 }
 
 float Eye::Clamp(float d, float min, float max) const
 {
-  const float t = d < min ? min : d;
-  return t > max ? max : t;
-}
-
-bool Eye::IsMoving() const
-{
-	return isMoving;
+	const float t = d < min ? min : d;
+	return t > max ? max : t;
 }
 
 float Eye::Random(float min, float max) const

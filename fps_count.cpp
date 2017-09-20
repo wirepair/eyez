@@ -1,5 +1,7 @@
 #include "fps_count.h"
 
+// Taken from: http://sdl.beuc.net/sdl.wiki/SDL_Average_FPS_Measurement
+
 const int FRAME_VALUES = 10;
 
 // An array to store frame times:
