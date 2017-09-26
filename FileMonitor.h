@@ -17,25 +17,25 @@
 class FileMonitor
 {
 public:
-	FileMonitor(std::string& filePath) : filePath(filePath), fd(0), wd(0) {}
-	
-	FileMonitor(const FileMonitor &other) : filePath(other.filePath), fd(other.fd), wd(other.wd) {}
+    FileMonitor(std::string& filePath) : filePath(filePath), fd(0), wd(0) {}
+    
+    FileMonitor(const FileMonitor &other) : filePath(other.filePath), fd(other.fd), wd(other.wd) {}
 
-	bool Init();
+    bool Init();
 
-	bool ShouldReload();
+    bool ShouldReload();
 
-	~FileMonitor();
-
-private:
-	bool SetNonBlocking();
+    ~FileMonitor();
 
 private:
-	std::string& filePath;
+    bool SetNonBlocking();
 
-	int fd;
-	int wd;
-	char buffer[BUF_LEN];
+private:
+    std::string& filePath;
+
+    int fd;
+    int wd;
+    char buffer[BUF_LEN];
 
 };
 

@@ -5,9 +5,9 @@
 
 class TestDetector : public Detector
 {
-	inline bool Init() { return true; }
+    inline bool Init() { return true; }
 
-	bool Detect(float* x, float* y);
+    bool Detect(float* x, float* y);
 };
 
 #endif // TEST_DETECTOR_H

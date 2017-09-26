@@ -7,6 +7,5 @@ uniform float u_time;
 
 void main() 
 {
-	
-	gl_Position = vec4(u_position.xy, 0.0, 1.0);
+    gl_Position = vec4(u_position.xy, 0.0, 1.0);
 }

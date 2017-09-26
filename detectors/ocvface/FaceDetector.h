@@ -19,31 +19,31 @@ using namespace cv;
 class FaceDetector : public Detector
 {
 public:
-	/** Initializes our cascade classifier, opens the camera and starts detection in new thread **/
-	bool Init() override;
+    /** Initializes our cascade classifier, opens the camera and starts detection in new thread **/
+    bool Init() override;
 
-	/** Detects faces in a new thread **/
-	void RunDetection();
+    /** Detects faces in a new thread **/
+    void RunDetection();
 
-	/** Returns true iff face detected, updating x & y arguments with the coordinates **/
-	bool Detect(float* x, float* y) override;
+    /** Returns true iff face detected, updating x & y arguments with the coordinates **/
+    bool Detect(float* x, float* y) override;
 
-	/** Stops the detection and joins the thread **/
-	~FaceDetector();
-
-private:
-	/** Loads the cascade data **/
-	bool InitCascade();
+    /** Stops the detection and joins the thread **/
+    ~FaceDetector();
 
 private:
-	std::thread detectionThread;
-	std::mutex dataLock;
-	DetectionData detectionData;
-	std::atomic_bool running;
+    /** Loads the cascade data **/
+    bool InitCascade();
 
-	const std::string faceCascadeName = "res/lbpcascade_frontalface.xml"; //"res/haarcascade_frontalface_alt.xml";
-	CascadeClassifier face_cascade;
-	VideoCapture capture;
+private:
+    std::thread detectionThread;
+    std::mutex dataLock;
+    DetectionData detectionData;
+    std::atomic_bool running;
+
+    const std::string faceCascadeName = "res/lbpcascade_frontalface.xml"; //"res/haarcascade_frontalface_alt.xml";
+    CascadeClassifier face_cascade;
+    VideoCapture capture;
 };
 
 #endif // FACE_DETECTOR_H
